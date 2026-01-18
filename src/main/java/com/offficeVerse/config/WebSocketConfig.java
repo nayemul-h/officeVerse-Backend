@@ -1,27 +1,44 @@
 package com.offficeVerse.config;
 
-
+import com.offficeVerse.websocket.*;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-
+import org.springframework.web.socket.config.annotation.*;
 
 @Configuration
-@EnableWebSocketMessageBroker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+@EnableWebSocket
+public class WebSocketConfig implements WebSocketConfigurer {
 
+    private final ChatSocket chatSocket;
+    private final MovementSocket movementSocket;
+    private final RoomSocket roomSocket;
+    private final ZoneSocket zoneSocket;
 
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
-        registry.setApplicationDestinationPrefixes("/app");
+    public WebSocketConfig(ChatSocket chatSocket,
+                           MovementSocket movementSocket,
+                           RoomSocket roomSocket,
+                           ZoneSocket zoneSocket) {
+        this.chatSocket = chatSocket;
+        this.movementSocket = movementSocket;
+        this.roomSocket = roomSocket;
+        this.zoneSocket = zoneSocket;
     }
 
-
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        // Chat WebSocket
+        registry.addHandler(chatSocket, "/chat")
+                .setAllowedOrigins("http://localhost:5173", "http://localhost:3000");
+
+        // Movement WebSocket
+        registry.addHandler(movementSocket, "/movement")
+                .setAllowedOrigins("http://localhost:5173", "http://localhost:3000");
+
+        // Room WebSocket
+        registry.addHandler(roomSocket, "/rooms")
+                .setAllowedOrigins("http://localhost:5173", "http://localhost:3000");
+
+        // Zone WebSocket
+        registry.addHandler(zoneSocket, "/zones")
+                .setAllowedOrigins("http://localhost:5173", "http://localhost:3000");
     }
 }

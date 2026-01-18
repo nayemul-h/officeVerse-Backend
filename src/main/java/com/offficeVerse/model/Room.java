@@ -1,39 +1,66 @@
 package com.offficeVerse.model;
 
 import jakarta.persistence.*;
-import java.util.List;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+@Getter
+@Setter
+//@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Table(name = "rooms")
 public class Room {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String name;
-    private String roomType; // eg: meeting, desk
 
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private List<Player> players;
+    private String roomType; // meeting, desk
+    private int maxPlayers = 20;
+    private boolean isPrivate = false;
+    private String password;
+    private Long hostId;
 
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private List<ChatMessage> messages;
+    @OneToMany(
+            mappedBy = "room",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<Player> players = new ArrayList<>();
 
-    protected Room() {}
+    @OneToMany(
+            mappedBy = "room",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<ChatMessage> messages = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(
+            name = "room_ready_status",
+            joinColumns = @JoinColumn(name = "room_id")
+    )
+    @MapKeyJoinColumn(name = "player_id")
+    @Column(name = "is_ready")
+    private Map<Player, Boolean> readyStatus = new HashMap<>();
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public Room(String name) {
         this.name = name;
     }
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public List<Player> getPlayers() { return players; }
-    public List<ChatMessage> getMessages() { return messages; }
 
-    public void setPlayers(List<Player> players) { this.players = players; }
-    public void setMessages(List<ChatMessage> messages) { this.messages = messages; }
+    public Room() {
 
-    public String getRoomType() {
-        return roomType;
-    }
-
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
     }
 }
